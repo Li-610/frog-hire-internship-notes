@@ -7,49 +7,88 @@
 ## 工具链概览
 
 - **Node.js + npm/pnpm**  
-  项目运行环境和包管理器，用于安装依赖和运行构建脚本。
+  整个项目依赖 Node.js 运行，`pnpm` 用于安装和管理依赖。  
+  项目脚本（`npm run dev` / `npm run build`）都依赖 Node.js 环境执行。  
 
 - **WXT (Web eXtension Toolkit)**  
-  浏览器扩展开发的核心框架。  
-  - 自动生成 `manifest.json`  
-  - 构建输出到 `.output/chrome-mv3/`（可在 Chrome 加载测试）  
-  - 提供开发模式，支持热更新  
+  核心开发框架，专门用于开发 Chrome/Firefox 扩展。  
+  - 读取 `wxt.config.ts` 生成对应的 `manifest.json`  
+  - 把代码构建成 `.output/chrome-mv3/`（可以在 Chrome 加载调试）  
+  - 提供命令：`wxt`（开发模式）、`wxt build`（生产构建）、`wxt zip`（打包发布）  
 
 - **Vite**  
-  WXT 内部使用的快速打包工具，处理 TS/Vue/Tailwind。  
+  打包工具，WXT 内部就是基于 Vite。  
+  - 处理 TypeScript 和 Vue 单文件组件（SFC）  
+  - 和 Tailwind 一起运行，实现快速热更新  
 
 - **TypeScript**  
-  为项目增加类型安全（例如 autofill 配置里的 `ApplicationConfig`）。  
-  - 学习了 `type` 和 `interface` 的区别  
-  - 熟悉了 import/export 的用法  
-  - 理解了如何用类型来约束 autofill 配置结构  
+  项目里大量用到类型定义，例如 `ApplicationConfig`。  
+  - 确保 autofill 配置文件里的字段和规则合法  
+  - 避免写错选择器或者 action 类型  
+
+- **lefthook**  
+  Git hook 工具，在提交代码时运行检查（例如 Biome 格式化）。  
 
 ---
 
-## 前端常用库
+## 前端框架与 UI 库
 
 - **Vue 3**  
+  用于实现扩展的 UI（popup、options 面板）。  
   - 使用组合式 API（`ref`、`reactive`、`computed`）管理状态  
-  - 在扩展 UI（popup、options）中使用  
-- **TailwindCSS**  
-  - 原子化 CSS 框架  
-  - 用 class 快速实现布局和样式  
-- **Nuxt UI Pro**  
-  - 基于 Tailwind 的 Vue 组件库  
-  - 提供现成的 UI 组件提升开发效率  
+  - 示例：选项页面可以用 Vue 渲染一个表单来管理 autofill 配置  
 
+- **vue-router**  
+  项目里如果扩展 UI 有多个页面（比如 popup 和设置页面），会用路由管理跳转。  
+
+- **TailwindCSS**  
+  工具类 CSS 框架，直接在 HTML/TSX 里写 `class="p-4 bg-gray-100"` 实现样式。  
+  - 项目 popup 和 options 页面的布局和按钮都用 Tailwind 快速写出来  
+
+- **Nuxt UI / Nuxt UI Pro**  
+  Vue 组件库，基于 Tailwind 封装好的组件（比如按钮、卡片、输入框）。  
+  - 可以直接用 `<UButton>`，不用自己写一堆样式  
+
+- **@vueuse/core**  
+  提供 Vue 常用的组合式函数，比如监听窗口大小、复制到剪贴板等。  
+  - 在扩展 UI 里可以减少很多重复逻辑  
+
+- **Iconify（lucide/simple-icons）**  
+  图标库，用于在扩展 UI 里显示社交图标（GitHub/LinkedIn 等）。  
 
 ---
 
-- **工具链 / 构建相关**  
-  `wxt`, `typescript`, `tailwindcss`, `@wxt-dev/module-vue`, `vue-tsc`, `lefthook`  
+## 功能类库（和 autofill 直接相关）
 
-- **前端框架 / UI**  
-  `vue`, `vue-router`, `@nuxt/ui`, `@nuxt/ui-pro`, `@vueuse/core`,  
-  `@iconify-json/lucide`, `@iconify-json/simple-icons`  
+- **jsonpath-plus**  
+  用于从简历 JSON 数据里提取字段。  
+  - 例如：`$.profile.basics.email` 就能取出邮箱  
+  - 在 `lever.ts`、`workable.ts` 里 action 的 `value` 字段经常用到  
 
-- **功能类库**  
-  `jsonpath-plus`, `date-fns`, `es-toolkit`, `@webext-core/messaging`  
+- **date-fns**  
+  日期处理库，用来格式化和比较时间。  
+  - 如果 autofill 表单里有“Available from date”，就会用这个库来生成日期字符串  
 
-- **测试 & 质量**  
-  `vitest`, `@biomejs/biome`, `@types/node`  
+- **es-toolkit**  
+  工具函数集合，类似 lodash。  
+  - 例如数组去重、对象深拷贝，可以在 autofill 配置里写 transforms 用到  
+
+- **@webext-core/messaging**  
+  浏览器扩展里的消息通信模块。  
+  - 背景页（background）和内容脚本（content script）之间通信时用到  
+
+---
+
+## 测试 & 质量保证
+
+- **Vitest**  
+  测试框架（类似 Jest，但基于 Vite，速度快）。  
+  - 可以写单元测试来验证 autofill 规则是否能正确匹配 DOM  
+
+- **Biome**  
+  代码质量工具，集成了 Lint + 格式化。  
+  - 代替了 ESLint + Prettier  
+  - 在 `npm run check` 时运行，保证代码风格统一  
+
+- **@types/node**  
+  Node.js 类型定义，保证 TS 在写脚本时不会报错。  
