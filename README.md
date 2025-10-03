@@ -94,16 +94,8 @@
   Node.js 类型定义，保证 TS 在写脚本时不会报错。  
 
 
----
-title: "前端工程 Q&A 速查（单文件版）"
-author: "Your Name"
-date: "2025-10-02"
-description: "pnpm / monorepo / Vite / TypeScript / Vue3 / Biome / Lefthook 常见问题与示例（一个文件包含全部内容，可直接复制为 README.md）"
----
+# 前端学习
 
-# 前端工程 Q&A 速查（单文件版）
-
-> 本文将以下问题集中在**一份** Markdown 文件中，便于复制使用：
 >
 > - **pnpm**：monorepo 与 workspace、共享模块
 > - **Vite**：路径别名、环境配置、静态资源处理
